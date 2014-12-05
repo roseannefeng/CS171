@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
+<script type="text/javascript" src="./libs/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="./libs/jquery.xdomainajax.js"></script>
+<script type="text/javascript" src="./libs/FileSaver.js"></script>
+
+		<script>
+	var jsonobject = {};
+	var l = {};
+	
+	// initialize matrix
+
+	function KeyNameChange(oldkey, newkey, ArrayWithKeys) {
+	var keyArray = [];
+	for(var i = 0; i < ArrayWithKeys.length; i++) { 
+		var Object = ArrayWithKeys[i];
+		Object[newkey] = Object[oldkey];
+		delete(Object[oldkey]);
+		keyArray.push(Object);   }
+	return keyArray; }	
+
+	
+	function industryList(country, data) {
+    var x = [];
+	var total;
+
+    data.value.forEach(function (d) {
+        if (d.COX == country && d.IND == "TOTAL" && d.INX != "TOTAL") {
+
+            var y = {
+                industry: "",
+                value: 0
+            };
+
+            y.industry = d.INX;
+            y.value = d.Value
+            x.push(y);
+        }
+		else if (d.COX == country && d.IND == "TOTAL" && d.INX == "TOTAL") {
+		total = d.Value;
+		} 
+    })
+
+    x.sort(function(a,b) {
+        return b.value < a.value ? -1 : b.value > a.value ? 1 : 0;
+    });
+	
+    return {"COX": country, "total": total, "industries": x};
+}
+	
+	
+	
+	var DataSetCode = "TIVAORIGINVA"; 
+    var saveToFile = function(object, filename){
+        var blob, blobText;
+        blobText = [JSON.stringify(object)];
+        blob = new Blob(blobText, {
+            type: "text/plain;charset=utf-8"
+        });
+		saveAs(blob, filename);
+    }
+
+	queue()
+		.defer(d3.json,'./data/superData.json')
+		.await(InitFunction);
+
+/////////////////////////////////////////////////////
+//////// GetData call to get the data from the API for 
+//////// source and destination industries for all countries
+	function InitFunction(error, dimensions) {
+
+	// Add or rearrange the groups below and then rerun to get the new 
+	// group industry totals
+	var countryCat = {
+	//organized by which of the industry total values is highest
+	dirDomestic: ["CAN", "USA", "MEX", "ARG", "CHL", "ZAF", "DEU", "ESP", "PRT", "FRA", "GBR", "BEL", "CHE", "NLD", "SVN", "AUT", "POL", "HUN", "ROU", "BGR", "GRC", "TUR", "ISR", "SAU", "RUS", "LTU", "LVA", "EST", "NOR", "SWE", "FIN", "ISL", "TUR", "IND", "THA", "KHM", "VNM", "IDN", "AUS", "BRN", "HKG", "MLT"],
+	//indirect domestic origin
+	indDomestic: ["BRA", "ITA", "CHN", "JPN", "NZL"],
+	foreignValue: ["IRL", "LUX", "CZE", "SVK", "KOR", "PHL", "TWN", "MYS", "SGP"]
+	}
+	
+	var industryNames = ["Agriculture", "Mining", "Food products", "Textiles & apparel", "Wood & paper", "Chemicals & minerals", "Basic metals", "Machinery",
+    "Electrical equipment", "Transport equipment", "Other manufactures", "Utilities", "Construction", "Wholesale & retail", "Transport & telecoms",
+    "Finance & insurance", "Business services", "Other services"];
+
+	var industries = {"01T05":0,
+			"10T14":1,
+			"15T16":2,
+			"17T19":3,
+			"20T22":4,
+			"23T26":5,
+			"27T28":6,
+			"29":7,
+			"30T33":8,
+			"34T35":9,
+			"36T37":10,
+			"40T41":11,
+			"45":12,
+			"50T55":13,
+			"60T64":14,
+			"65T67":15,
+			"70T74":16,
+			"75T95":17};
+
+		var years = ["1995", "2000", "2005", "2008", "2009"]; 
+		//var years = ["2008", "2009"]; 	
+		var order = d3.keys(industries).sort().concat("TOTAL");	
+		var result;		
+		var ActualYearString; for (var i in years) { 
+			ActualYearString = years[i];
+			console.log("Year : ",ActualYearString);
+
+			var ActualCountryString; var blahobject = []; 					
+			var result1;
+			var result2;
+			var result3;
+			//dimensions.TIVA_OECD_WTO.COU = ["FRA", "CAN"]; 	
+			for (var j in dimensions.TIVA_OECD_WTO.COU) { 
+				ActualCountryString = dimensions.TIVA_OECD_WTO.COU[j].MemberCode;
+				console.log("Country number: ",j, " of ", dimensions.TIVA_OECD_WTO.COU.length, "countries: ", ActualCountryString, "Year: ", ActualYearString);				
+				 var url = "http://stats.oecd.org/OECDStatWCF_OData/OData.svc/TIVA_OECD_WTO?$filter=(PAR eq 'TOTAL') and (COU eq '" + ActualCountryString + "') and (VAR eq 'EXGR' or VAR eq 'EXGR_DDC' or VAR eq 'EXGR_IDC' or VAR eq 'EXGR_RIM' or VAR eq 'EXGR_FVA' or VAR eq 'EXGRDVA_EX') and (TIME eq '" + ActualYearString + "')&$format=json";
+				 	var elementMap = [];
+					$.ajax({
+						url: url,
+						async: false,
+						success: function (data){
+								result1 = d3.nest()
+									.key(function(d) { return d.IND; }).sortKeys(function(a,b) { return order.indexOf(a) - order.indexOf(b); })
+									.entries(data.value);
+								elementMap.push(result1);
+						},
+						error: function() { return console.log("ajax did not finish"); }
+					});
+					for (var obj in result1) {
+						result1[obj].values.forEach(function(d) {
+							d.ShortName = industryNames.concat("Total Industry")[obj];
+						});
+					}	
+				blahobject.push({'COU': ActualCountryString, 'source': result1 }); 
+			}	
+			
+///////////////////////// And for total 
+			
+			var url = "http://stats.oecd.org/OECDStatWCF_OData/OData.svc/TIVA_OECD_WTO?$filter=(PAR eq 'TOTAL') and (VAR eq 'EXGR' or VAR eq 'EXGR_DDC' or VAR eq 'EXGR_IDC' or VAR eq 'EXGR_RIM' or VAR eq 'EXGR_FVA' or VAR eq 'EXGRDVA_EX') and (TIME eq '" + ActualYearString + "')&$format=json";
+			var mask_total;
+			var number_countries;
+			var total_country_list;
+
+			$.ajax({
+					url: url,
+					async: false,
+					success: function (data){
+						var removed;
+						function NotEU27(element) { 
+								if (element.COU !== "EU27") {
+									return element ; 
+								}
+							} 
+							var filtered = data.value.filter(NotEU27);
+							data.value = filtered;
+
+						console.log("result of filter", data.value);
+						var result_countries = d3.nest()
+						.key(function(d) { return d.COU; })
+						.entries(data.value);	
+						total_country_list = d3.keys(result_countries);
+						number_countries = total_country_list.length;
+						
+						// for total calculation
+						
+						var adjusted_value = data.value;
+						for (var obj in data.value) {
+							if (data.value[obj].VAR == "EXGRDVA_EX") {
+								adjusted_value[obj].Value = data.value[obj].Value / number_countries;
+							}
+						}
+						mask_total = [];
+						mask_total['key']='TOTAL';
+						console.log("data", data);
+						var total_guts = d3.nest()
+						.key(function(d) { return d.IND; }).sortKeys(function(a,b) { return order.indexOf(a) - order.indexOf(b); })
+						.key(function(d) { return d.VAR; })
+						.rollup(function(leaves, i) { return d3.sum(leaves, function(d) {return parseFloat(d.Value);})} )
+						.entries(adjusted_value);	
+
+						for (var i = 0; i < total_guts.length; i++) {
+							total_guts[i].ShortName = industryNames.concat("Total Industry")[i];
+						}					
+						var resultsValues = [];
+							total_guts.forEach(function(d) {
+						   var indust = d.key;
+						   var sname = d.ShortName;	   
+						   for (var i = 0; i < d.values.length; i++) {
+									var varble = d.values[i].key; 
+									var vals = d.values[i].values;
+									resultsValues.push({'COU': 'TOTAL', 'IND': indust, 'PAR': 'TOTAL', 'TIME': ActualYearString, 'VAR': varble, 'Flags': "", 'Value': vals, 'Value': vals, 'ShortName': sname});
+									}
+							});
+
+						result2 = d3.nest()
+									.key(function(d) { return d.IND; })
+									.entries(resultsValues);
+									
+						///
+						// for loop over groups
+						result3 = [];
+						var new_values = data.value;
+						var results_list = d3.keys(countryCat);
+						var k = 0;
+						for (var grp in countryCat) {
+							number_countries = countryCat[grp].length
+							for (var i = 0; i < number_countries; i++) {
+								var pays = countryCat[grp][i];
+								 //console.log("group", pays);
+								for (var obj in new_values) {
+									if (new_values[obj].COU == "pays") {
+										removed = new_values.splice(obj,1);
+									}
+								}							
+							}
+							var adjusted_value = new_values;
+							for (var obj in new_values) {
+								if (new_values[obj].VAR == "EXGRDVA_EX") {
+									adjusted_value[obj].Value = new_values[obj].Value / number_countries;
+								}
+							}
+							mask_total = [];
+							mask_total['key']= results_list[k];
+							var total_guts = d3.nest()
+							.key(function(d) { return d.IND; }).sortKeys(function(a,b) { return order.indexOf(a) - order.indexOf(b); })
+							.key(function(d) { return d.VAR; })
+							.rollup(function(leaves, i) { return d3.sum(leaves, function(d) {return parseFloat(d.Value);})} )
+							.entries(adjusted_value);	
+							for (var i = 0; i < total_guts.length; i++) {
+								total_guts[i].ShortName = industryNames.concat("Total Industry")[i];
+							}					
+							var resultsValues = [];
+								total_guts.forEach(function(d) {
+								var indust = d.key;
+								var sname = d.ShortName;	   
+								for (var i = 0; i < d.values.length; i++) {
+										var varble = d.values[i].key; 
+										var vals = d.values[i].values;
+										resultsValues.push({'COU': results_list[k], 'IND': indust, 'PAR': 'TOTAL', 'TIME': ActualYearString, 'VAR': varble, 'Flags': "", 'Value': vals, 'Value': vals, 'ShortName': sname});
+										}
+								});
+							result3[results_list[k]] = d3.nest()
+										.key(function(d) { return d.IND; })
+										.entries(resultsValues);
+						k += 1;				
+						}
+					},
+					error: function() { return console.log("ajax did not finish"); }
+				});
+				/// for total -all countries
+				for (var obj in result2) {
+					result2[obj].values.forEach(function(d) {
+						d.ShortName = industryNames.concat("Total Industry")[obj];
+					});
+				}	
+				blahobject.push({'COU': 'TOTAL', 'source': result2 }); 
+				
+				/// for grouped countries
+				for (var grp in result3) {
+				var result_Vec = result3[grp]
+					for (var obj in result_Vec) {
+						result_Vec[obj].values.forEach(function(d) {
+						d.ShortName = industryNames.concat("Total Industry")[obj];
+						});
+											}	
+					blahobject.push({'COU': grp, 'source': result3[grp] });
+				}
+				
+			jsonobject[ActualYearString] = blahobject;				
+			}	
+	console.log("done... saving now", jsonobject);
+	saveToFile(jsonobject, "IndustryTotals.json");		
+
+	}
+	
+		</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>D3: An HTML div tooltip</title>
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+		<script type="text/javascript" src="http://balupton.github.com/jquery-syntaxhighlighter/scripts/jquery.syntaxhighlighter.min.js"></script>
+		<script type="text/javascript">
+			$.SyntaxHighlighter.init({
+				'lineNumbers': true,
+				'themes': ['balupton', 'google'],
+				'theme': 'balupton'
+			});
+			function prettify(inselector, outselector){
+				var $tjs = $(inselector);
+				$tjs.each(function(){
+					var code = "<code class='language-javascript'>"+$(this).text()+"</div><br/>";
+					$(outselector).append(code);
+				});
+				$(outselector).syntaxHighlight();
+			}
+		</script>
+		<script type="text/javascript" src="d3/d3.v3.js"></script>
+		<script type="text/javascript" src="hist2.js"></script>
+		<style type="text/css">
+
+			rect:hover {
+				fill: orange;
+			}
+			
+			.tooltip {
+				position: absolute;
+				width: 200px;
+				height: auto;
+				padding: 10px;
+				background-color: white;
+				-webkit-border-radius: 10px;
+				-moz-border-radius: 10px;
+				border-radius: 10px;
+				-webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				-moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				pointer-events: none;
+			}
+			
+			.tooltip.hidden {
+				display: none;
+			}
+			
+			.tooltip p {
+				margin: 0;
+				font-family: sans-serif;
+				font-size: 16px;
+				line-height: 20px;
+			}
+
+		</style>
+	</head>
+	<body>
+		<div id="histo1">
+			<div class="hidden tooltip">
+				<p><strong>Important Label Heading</strong></p>
+				<p><span class="value">100</span>%</p>
+			</div>
+		</div>
+		<div id="histo2">
+			<div class="hidden tooltip">
+				<p><strong>Important Label Heading</strong></p>
+				<p><span class="value">100</span>%</p>
+			</div>
+		</div>
+		<hr/>
+		<div id="docs"></div>
+	</body>
+	<script type="text/javascript" class="script-highlight">
+		var dataset = [ 5, 10, 13, 19, 21, 25, 22, 18, 15, 13,
+						11, 12, 15, 20, 18, 17, 16, 18, 23, 25 ];
+		var h1=hist2.histogram_maker(dataset, '#histo1');
+		h1.create_bars();
+		var dataset2 = [ 30, 10, 13, 19, 21, 25, 22, 18, 15, 13,
+						11, 12, 15, 20, 18, 19, 16, 18, 23, 25 ];
+		var h2 = hist2.histogram_maker(dataset2, '#histo2');
+		h2.create_bars();
+	</script>
+	<script type="text/javascript">
+		$(document).ready(function(){
+			prettify(".script-highlight", '#docs');
+			//$('#docs').find('.code').each(function(){
+			//	$(this).syntaxHighlight();
+			//});
+		});
+	</script>
+</html>

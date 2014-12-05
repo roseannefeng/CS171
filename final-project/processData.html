@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script type="text/javascript" src="libs/jquery-1.11.0.min.js"></script>
+<script src="libs/FileSaver.js"></script>
+
+<div id="vis"></div>
+<script>
+
+    var dsv = d3.dsv("|", "text/plain");
+
+    dsv("data/OECD-WTO_TiVA_2009.csv",function(error,data) {
+
+        var countries = [];
+        data.forEach(function(d) {
+            if (countries.indexOf(d.COU) == -1) {
+                countries.push(d.COU)
+            }
+        });
+
+        var newData = {};
+        countries.forEach(function(country){
+            var x = {
+                EXPORTS: 0,
+                TIVA: 0
+            };
+
+            data.forEach(function (d) {
+                if (d.COU == country && d.VAR == "EXGR" && d.PAR == "Total" && d.IND == "Total") {
+                    x.EXPORTS = (+d.VALUE);
+                }
+
+                if (d.COU == country && d.VAR == "EXGRDVA" && d.PAR == "Total" && d.IND == "Total") {
+                    x.TIVA = (+d.VALUE);
+                }
+            });
+
+            newData[country] = x;
+
+        });
+
+        console.log(newData);
+
+       saveToFile(newData,"ExportsTIVA2009.json");
+    });
+
+    var saveToFile = function(object, filename){
+        var blob, blobText;
+        blobText = [JSON.stringify(object)];
+        blob = new Blob(blobText, {
+            type: "text/plain;charset=utf-8"
+        });
+        saveAs(blob, filename);
+    }
+</script>
+
+
+</body>
+</html>

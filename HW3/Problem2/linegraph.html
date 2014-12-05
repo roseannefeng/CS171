@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <script src="../libs/d3.v3.min.js"></script>
+    <style>
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: lightgrey; }
+
+        .dataArea {
+            stroke: 1px steelblue;
+            fill:steelblue;
+            fill-opacity:0.5;
+            clip-path: url(#clip);
+        }
+
+		.line1 {
+			fill: none;
+			stroke: steelblue;
+			stroke-width: 0.5px;
+		}
+
+		.line2 {
+			fill: none;
+			stroke: lime;
+			stroke-width: 0.5px;
+		}
+
+		.line3 {
+			fill: none;
+			stroke: orange;
+			stroke-width: 0.5px;
+		}
+		
+		.line4 {
+			fill: none;
+			stroke: red;
+			stroke-width: 0.5px;
+		}
+
+		.line5 {
+			fill: none;
+			stroke: magenta;
+			stroke-width: 0.5px;
+		}
+
+    </style>
+  <form>
+  Estimate used:
+    <label><input type="radio" name="layout" value="usc" checked> US Census</label>
+    <label><input type="radio" name="layout" value="pb" > Population Bureau</label>
+    <label><input type="radio" name="layout" value="un"> UN</label>  
+    <label><input type="radio" name="layout" value="hyde"> HYDE</label>
+    <label><input type="radio" name="layout" value="mad"> Maddison</label>
+  </form>
+  </head>
+<body>
+    <div id="vis"></div>
+
+	<script src = "linegraph.js"></script>
+
+
+</body>
+</html>

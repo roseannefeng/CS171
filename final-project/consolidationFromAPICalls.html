@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
+<script src="./libs/FileSaver.js"></script>
+<script type="text/javascript" src="./libs/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="./libs/jquery.xdomainajax.js"></script>
+<div id="vis"></div>
+
+
+<script>
+
+    var saveToFile = function(object, filename){
+        var blob, blobText;
+        blobText = [JSON.stringify(object)];
+        blob = new Blob(blobText, {
+            type: "text/plain;charset=utf-8"
+        });
+		saveAs(blob, filename);
+    }
+	
+/////////////////////////////////////////////////////
+//////// set up the objects to receive the data and 
+//////// then make the API calls for each database
+		var def1 = {}; 
+		var def2 = {};
+		superObject = {};
+		DimensionQuery("TIVA_OECD_WTO", def1);
+		DimensionQuery("TIVAORIGINVA", def2);
+		saveToFile({"TIVA_OECD_WTO": def1, "TIVAORIGINVA": def2}, "superData.json");
+
+/////////////////////////////////////////////////////
+//////// DimensionQuery call to get the data from the API for s
+//////// Codes, Countries, Variables, etc. 
+
+		function DimensionQuery(databaseString, result) { 
+			
+			var url1 = "http://stats.oecd.org/OECDStatWCF_OData/OData.svc/GetDimension?DatasetCode=" + databaseString + "&$format=json"
+				$.ajax({
+					url: url1, 
+			        async: false,
+					success: function (data, status){
+						data.value.forEach(function (d) {
+							var url2 = "http://stats.oecd.org/OECDStatWCF_OData/OData.svc/GetMember?DatasetCode=" + databaseString + "&$filter=DimensionCode eq '" + d.DimensionCode + "'&$format=json"							
+								$.ajax({
+									url: url2, 
+							        async: false,
+									success: function (data, status){
+										result[d.DimensionCode] = data.value;
+									},
+									error: function(data, status) { return console.log("ajax did not finish"); }
+								});
+						}) 	
+					},
+					error: function(data, status) { return console.log("ajax did not finish"); }
+				});
+		};	
+
+
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,17 @@
+Part 1 - Analysis
+<ul><li>Think about how these networks are different. Analyze the “dimensions” of these networks. What are the relevant attributes (e.g., commits, users, branches, commit size, etc.) of these representations? What other attributes could be relevant in this graph? Write a list of all the attributes your visualization could show. 
+<li>Are there different roles, i.e., different types of users who might want to achieve different things? Write a list of user roles. 
+<li>Think about which tasks a user of your visualization might want to achieve. Write down a list of tasks. <li>Identify one role that you want to design your visualization for. Prioritize your task and attribute lists based on this role’s needs.
+</ul>
+
+<p>I honestly can't think of very many features that aren't included that could be used in a visualization. Commits, users, branches, commit size could all be relevant, perhaps a clearer datestamp (since it's hard to tell when anything was made if you want something more precise than relative to other commits) or just a more consistent time axis, since the dates are spaced strangely. </p>
+<p>The main reason I can think of for someone to access this visualizaton is to track the development of the repository's branches. This can be looked at in terms of how much code is added, who does the adding, or when changes occur. I really can't imagine different kind of roles, since it only seems useful to managers who need some way to evaluate progress. I want to design my visualization so that it can be easily understood which users are contributing to which branches.</p>
+
+Part 2 - Sketching
+<ul><li>Decide on which visual variable to use for which attributes of the visualizations. Remember the strengths and weaknesses of visual variables we discussed in class. Use the strongest visual variable for the most important attributes of the data.
+<li>Do you think it is necessary to represent every single commit as a separate node? Could you think of ways to aggregate this?
+<li>Do you think that every contributor needs a “row”, as on the default network view on github? Could you think of a smarter way to summarize those? 
+<li>Is a node-link diagram the appropriate representation? Or should you consider alternative graph representations?
+</ul>
+
+Examples of my sketches included in the pdf with various notes. Some highlights/ideas - color used for branch or user, link length tied to time between commits. Considered having nodes calculate size by the size of the commit but decided that would probably get confusing and difficult to read. It's not really necessary to represent every commit as a separate node, and I wanted to try to merge commits together into one node if they shared the same user and within the same time frame, but I had difficulty implementing that and, as a result, my visualization is pretty crowded, which makes it weaker than it could be. I don't really think that every contributor needs a row - I ended up implementing node colors by user. I'm a bit worried that my graph doesn't really organize branches, but I included that information in the tool tip and most branches are easily distinguished by links between nodes and parents, so I think that should be readable enough. Node-link diagram seems the most natural to me, I'm not sure of other visualizations that could be useful, perhaps plotting them on a line graph of some kind where the x axis corresponds to time and the y coordinate is linked to the changes in the code. 

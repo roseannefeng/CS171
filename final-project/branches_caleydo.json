@@ -1,0 +1,107 @@
+[
+  {
+    "name": "develop",
+    "commit": {
+      "sha": "267dff2672d73e4a2d527610aafd62803e9c8652",
+      "url": "https://api.github.com/repos/Caleydo/caleydo/commits/267dff2672d73e4a2d527610aafd62803e9c8652"
+    }
+  },
+  {
+    "name": "develop_genlineup",
+    "commit": {
+      "sha": "948fd5b1b069641f79b50695c9fd55bc0f05f238",
+      "url": "https://api.github.com/repos/Caleydo/caleydo/commits/948fd5b1b069641f79b50695c9fd55bc0f05f238"
+    }
+  },
+  {
+    "name": "develop_pickingmanager2",
+    "commit": {
+      "sha": "d4834b96977609052c860fea33b94c2dd88b29b8",
+      "url": "https://api.github.com/repos/Caleydo/caleydo/commits/d4834b96977609052c860fea33b94c2dd88b29b8"
+    }
+  },
+  {
+    "name": "entourage",
+    "commit": {
+      "sha": "eaa802bab8cab43d58c8a3fe39ab784299cdec9b",
+      "url": "https://api.github.com/repos/Caleydo/caleydo/commits/eaa802bab8cab43d58c8a3fe39ab784299cdec9b"
+    }
+  },
+  {
+    "name": "master",
+    "commit": {
+      "sha": "1aea8444547fcf415155f6588f6d68132321ef94",
+      "url": "https://api.github.com/repos/Caleydo/caleydo/commits/1aea8444547fcf415155f6588f6d68132321ef94"
+    }
+  },
+  {
+    "name": "scatterplot",
+    "commit": {
+      "sha": "03b4c74557972bfd88663c14e44a173c5901624f",
+      "url": "https://api.github.com/repos/Caleydo/caleydo/commits/03b4c74557972bfd88663c14e44a173c5901624f"
+    }
+  },
+  {
+    "name": "stable_2",
+    "commit": {
+      "sha": "95e87dda5faaa86c24fbfb462b47167719e0b5ef",
+      "url": "https://api.github.com/repos/Caleydo/caleydo/commits/95e87dda5faaa86c24fbfb462b47167719e0b5ef"
+    }
+  },
+  {
+    "name": "stable_2.0.1",
+    "commit": {
+      "sha": "54aa129e3cbecf6fae050a1d109d010a3270785b",
+      "url": "https://api.github.com/repos/Caleydo/caleydo/commits/54aa129e3cbecf6fae050a1d109d010a3270785b"
+    }
+  },
+  {
+    "name": "stable_2.0.2",
+    "commit": {
+      "sha": "fa1b8fd60df2b4309062668d23eb7ec3afd62bd1",
+      "url": "https://api.github.com/repos/Caleydo/caleydo/commits/fa1b8fd60df2b4309062668d23eb7ec3afd62bd1"
+    }
+  },
+  {
+    "name": "stable_2.1",
+    "commit": {
+      "sha": "9c215e2eec125240e931bfd73f500898bd5f5ce6",
+      "url": "https://api.github.com/repos/Caleydo/caleydo/commits/9c215e2eec125240e931bfd73f500898bd5f5ce6"
+    }
+  },
+  {
+    "name": "stable_2.01",
+    "commit": {
+      "sha": "0a51cc63ab211dc94c91943a767bb5ab7dd9bf37",
+      "url": "https://api.github.com/repos/Caleydo/caleydo/commits/0a51cc63ab211dc94c91943a767bb5ab7dd9bf37"
+    }
+  },
+  {
+    "name": "vislinks",
+    "commit": {
+      "sha": "fb2eeca0a2f401377385b91220ea4d498d51959f",
+      "url": "https://api.github.com/repos/Caleydo/caleydo/commits/fb2eeca0a2f401377385b91220ea4d498d51959f"
+    }
+  },
+  {
+    "name": "vislinks2",
+    "commit": {
+      "sha": "e675c466490a2c3304e7b588da8ac4004aa0adc2",
+      "url": "https://api.github.com/repos/Caleydo/caleydo/commits/e675c466490a2c3304e7b588da8ac4004aa0adc2"
+    }
+  },
+  {
+    "name": "webpage_unpublished",
+    "commit": {
+      "sha": "60e4218dcd3e164e1786a15ac48956c130fb0454",
+      "url": "https://api.github.com/repos/Caleydo/caleydo/commits/60e4218dcd3e164e1786a15ac48956c130fb0454"
+    }
+  },
+  {
+    "name": "xdata",
+    "commit": {
+      "sha": "105d73aeb420f47d862d4878433a587601bdd54e",
+      "url": "https://api.github.com/repos/Caleydo/caleydo/commits/105d73aeb420f47d862d4878433a587601bdd54e"
+    }
+  }
+]

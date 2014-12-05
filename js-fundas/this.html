@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>The Function Context and this</title>
+		<style type="text/css">
+			html {
+			    color: #222;
+			    font-size: 1em;
+			    line-height: 1.4;
+			    font-family: sans-serif;
+  				-webkit-text-size-adjust: 100%;
+      			-ms-text-size-adjust: 100%;
+			}
+			body {
+			  margin: 10;
+			}
+		</style>
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+		<script type="text/javascript" src="http://balupton.github.com/jquery-syntaxhighlighter/scripts/jquery.syntaxhighlighter.min.js"></script>
+		<script type="text/javascript">
+			$.SyntaxHighlighter.init({
+				'lineNumbers': true,
+				'themes': ['balupton', 'google'],
+				'theme': 'balupton'
+			});
+			function prettify(inselector, outselector){
+				var $tjs = $(inselector);
+				$tjs.each(function(){
+					var code = "<code class='language-javascript'>"+$(this).text()+"</div><br/>";
+					$(outselector).append(code);
+				});
+				$(outselector).syntaxHighlight();
+			}
+			function prettify_div(codeselector) {
+				prettify(codeselector,codeselector+"-div");
+			}
+		</script>
+	</head>
+	<body>
+		<h1> The function context and this </h1>
+		
+		<h2> Function Invocation </h2>
+
+		<p> Every function gets a variable <code>this</code> and an array <code>arguments</code>. The value of the "this" parameter is defined by the invocation pattern. There are 4 basic invocation patterns: the method invocation pattern, the function invocation pattern, the constructor invocation pattern, and the apply invocation pattern. Lets tackle them one-by-one. </p>
+
+		<h3>Method Invocation pattern</h3>
+
+		<p> In the last page, we talked about prototypes and adding methods on prototypes. You might
+			have got the notion that it was the blessed way of creating objects. This is not true. Any standard object will get as its prototype <code>Object.prototype</code>, but there is no restriction on adding "methods" right into the object. Indeed, we used the method <code>getPrototypeFor</code> for the object <code>Object</code>.
+		</p>
+
+		<p> When a function is stored as a property of an object, we call it a method. In this case, 
+			<code>this</code> is set to the object itself. The binding of <code>this</code> happens very late, at invocation time.
+		</p>
+		<script type="text/javascript" id="method-invocation">
+			console.log("=========One==========");
+			var animal={'name':'Ralph', 'getName':function(){ return this.name;}};
+			console.log("ANIMAL",animal, animal.name, animal.getName());
+		</script>
+		<div id="method-invocation-div"></div>
+
+		<p> At this point you might object sbout the use of <code>this</code> when setting up methods on prototypes: it seems its the same syntax. We'll come to this in just a bit, but lets explore the constructor pattern first.
+		</p>
+
+		<h3>Constructor Invocation Pattern</h3>
+
+		<p> If a function is invoked with the <code>new</code> prefix, then a new object will be created with a hidden link to the value of the function's prototype member, and <code>this</code> will be bound to that new object. NOTE: not to the existing function object, but to the new object constructed. Thus in the constructor, <code>this</code> refers to the new object.
+		</p>
+
+		<p>Notice that unlike in regular functions, where <code>undefined</code> is returned if there is no return value, the return value when a function is invoked as a constructor is the object itself, or <code>this</code>. Thats why the return value of the constructor is the 'instance'. (Remember no classes and instances in javascript, JUST objects!)
+		</p>
+
+		<script type="text/javascript" id="constructor-invocation">
+			console.log("=========Two==========");
+			var Animal = function(name){this.name=name;};
+			animalprototype = Animal.prototype;
+			console.log("Animal prototype before method", animalprototype);
+			animalprototype.getTheName = function(){return this.name;};
+			var animal= new Animal("John");
+
+			console.log("ANIMAL",animal, animal.name, animal.getTheName());
+
+			console.log("bind to animal",animalprototype.getTheName.apply(animal));
+			//Get an undefined if the binding was not to animal
+			console.log("bind to animal",animalprototype.getTheName.apply(animalprototype));
+			//returns undefined
+		</script>
+		<div id="constructor-invocation-div"></div>
+
+
+		<p><code>new</code> does 3 things. Firstly, it creates a new object whose prototype is the constructor's protoype. Then it runs the constructor function, binding <code>this</code> in the constructor function to the new object. Finally, it returns the result of the constructor, which is the <code>this</code> inside the constructor.
+		</p>
+		<p>Thus if <code>new</code> was a method of <code>Function</code>, it would be defined like so:</p>
+
+		<pre class="language-javascript">
+			Function.prototype.new = function(){
+				var F = new function(){};
+				F.prototype = this.prototype;
+				f = new F();//Suppose empty functions had a special new
+				var f2 = this.apply(f, arguments);
+				return f2;
+			}
+		</pre>
+
+		<p> Indeed it is because of the vary late binding of <code>this</code>, that in the method <code>getTheName</code>, it refers to the 'instance'. Your initial thought is that <code>this</code> is bound to the <code>animalprototype</code> according to the method invocation pattern, but because of the way prototypal inheritance works, we first look in the new object <code>animal</code> created, dont find it, and go up the prototype chain to <code>animalprototype</code>. But the binding of <code>this</code> remains <code>animal</code> and we are saved. We can see this by directly using <code>apply</code>.
+		</p>
+
+		<h3> Function Invocation </h3>
+
+		<p> At this point you might be quite happy about how <code>this</code> is set, and you call an arbitrary function, or by mistake, you call a constructor without the <code>new</code>. You are in for a nasty surprise. In this case <code>this</code> is bound to the GLOBAL object, usually <code>window</code>, and if you set a variable like <code>document</code> in your miscallec constructor, or in your function, you just clobbered your namespace.
+		</p>
+
+		<script type="text/javascript" id="function-invocation">
+			console.log("=========Three==========");
+			var returnval = Animal('Rahul');
+			console.log("called Animal constructor without new", returnval);
+			console.log("new property on window", window.name);
+		</script>
+		<div id="function-invocation-div"></div>
+
+		<p> It gets worse. Suppose you defined an inner function in a method of an object. Then, in this inner function, <code>this</code> is still bound to the GLOBAL object, as we see below. Our workaround is to capture the value of <code>this</code> from the outer scope, and use it inside.
+		</p>
+
+		<script type="text/javascript" id="function-invocation-worse">
+			console.log("=========Three.worse==========");
+			Animal.prototype.junkFunc = function () {
+				var innerfunc = function () {
+					return this.name;
+				}
+				return innerfunc();
+			};
+			console.log("call junk method on animal", animal.junkFunc());
+			//Capture to do it right
+			Animal.prototype.okFunc = function () {
+				var that = this;
+				var innerfunc = function () {
+					return that.name;
+				}
+				return innerfunc();
+			};
+			console.log("call ok method on animal", animal.okFunc());
+		</script>
+
+		<div id="function-invocation-worse-div"></div>
+
+		<p>
+			Binding <code>this</code> to the GLOBAL object was a mistake in the design of the language, and we need this rather functional "capture" of variable to handle it.
+		</p>
+
+		<h3> Apply Invocation pattern </h3>
+
+		<p> This pattern is a generic name for thepattern when one of three javascript methods on the <code>Function</code> object, or anything who is linked to <code>Function.prototype</code> is used. <code>apply</code> and <code>call</code> are identical except that the first takes an array of arguments, the second just inlines them. Notice that even though <code>randomobject</code> does not inherit from <code>Animal.prototype</code> or dosent even have a <code>okFunc</code>, we can use the <code>this</code> binding to make it behave like it did. Indeed we used this in the fake implemtation of a <code>new</code> method above.
+		</p>
+
+		<script type="text/javascript" id="apply-invocation">
+			console.log("=========Four==========");
+			var randomobject={name:'Alex'};
+			var returnval = Animal.prototype.okFunc.apply(randomobject);
+			console.log("called Animal okfunc with randomobject bound", returnval);
+		</script>
+		<div id="apply-invocation-div"></div>
+
+		<p> <code>Function.prototype.bind</code>, introduced in ECMAScript 5th Edition, returns a NEW function that’s bound to a different <code>this</code>. (See http://dailyjs.com/2012/06/25/this-binding/). You can think of it as another way of doing a capture.
+		</p>
+
+		<script type="text/javascript" id="apply-invocation-bind">
+			console.log("=========Four.bind==========");
+			a = new Animal("Peter");
+			a.x=5;
+			a.y=6;
+			Animal.prototype.move =  function(x, y) {
+    			this.x += x;
+    			this.y += y;
+
+    			var checkBounds = function(min, max) {
+      				if (this.x < min || this.x > max) {
+        				console.log('Warning: Animal out of bounds');
+      				} else {
+      					console.log("Animal at", this.x, this.y);
+      				}
+    			}.bind(this);
+
+   				checkBounds(0, 100);
+ 			};
+ 			a.move(10, 15);
+ 			a.move(-20,0);
+		</script>
+		<div id="apply-invocation-bind-div"></div>
+
+		<script type="text/javascript">
+		$(document).ready(function(){
+			prettify_div("#method-invocation");
+			prettify_div("#constructor-invocation");
+			prettify_div("#function-invocation");
+			prettify_div("#function-invocation-worse");
+			prettify_div("#apply-invocation");
+			prettify_div("#apply-invocation-bind");
+		});
+	</script>
+	</body>
+</html>

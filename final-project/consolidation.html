@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
+<script src="../libs/FileSaver.js"></script>
+
+<div id="vis"></div>
+
+
+<script>
+
+	var def = {}
+	var VA = {}
+
+	var open = function(fileName, key, obj) {
+		var idk = d3.json(fileName, function(data) {
+			temp = {};
+			keylist = [];
+			data.value.forEach(function(d, i) {
+				temp[d["MemberCode"]] = d;
+				keylist.push(d["MemberCode"]);
+			});
+			temp["keyList"] = keylist;
+			obj[key] = temp;
+			console.log(fileName, key, obj);
+//			return obj;
+		});
+		return idk;
+	}
+	
+    var saveToFile = function(object, filename){
+        var blob, blobText;
+        blobText = [JSON.stringify(object)];
+        blob = new Blob(blobText, {
+            type: "text/plain;charset=utf-8"
+        });
+        saveAs(blob, filename);
+    }
+
+	queue()
+/*		.defer(open, "data/Countries.json", "countries", def)
+		.defer(open, "data/IndustryCodes.json", "industryCodes", def)
+		.defer(open, "data/Partners.json", "partners", def)
+		.defer(open, "data/Variables.json", "variables", def)*/
+		.defer(d3.json, "data/Countries.json")
+		.defer(d3.json, "data/IndustryCodes.json")
+		.defer(d3.json, "data/Partners.json")
+		.defer(d3.json, "data/Variables.json")
+		.await(next);
+		
+	function next(error, d1, d2, d3, d4) {
+		keys = ["countries", "industry", "partners", "variables"];
+		ourlist = [d1, d2, d3, d4];
+		ourlist.forEach(function(d, i) {
+			temp = {};
+			keylist = [];
+			d.value.forEach(function(e) {
+				temp[e["MemberCode"]] = e;
+				keylist.push(e["MemberCode"]);
+			});
+			temp["keyList"] = keylist;
+			def[keys[i]] = temp;
+		});
+
+		part2();
+	}
+	
+	function part2() {
+			queue()
+/*			.defer(open, "data/Countries_ORIGINVA.json", "countries", VA)
+			.defer(open, "data/Industry_ORIGINVA.json", "industry", VA)
+			.defer(open, "data/IndustrySource_ORIGINVA.json", "industrySource", VA)
+			.defer(open, "data/Partners_ORIGINVA.json", "partners", VA)
+			.defer(open, "data/Variables_ORIGINVA.json", "variables", VA)*/
+			.defer(d3.json, "data/Countries_ORIGINVA.json")
+			.defer(d3.json, "data/Industry_ORIGINVA.json")
+			.defer(d3.json, "data/IndustrySource_ORIGINVA.json")
+			.defer(d3.json, "data/Partners_ORIGINVA.json")
+			.defer(d3.json, "data/Variables_ORIGINVA.json")
+			.await(next2);
+	}
+	
+	function next2(error, e1, e2, e3, e4, e5) {
+		keys2 = ["countries", "industry", "industrySource", "partners", "variables"];
+		ourlist2 = [e1, e2, e3, e4, e5];
+		ourlist2.forEach(function(d, i) {
+			temp = {};
+			keylist = [];
+			d.value.forEach(function(e) {
+				temp[e["MemberCode"]] = e;
+				keylist.push(e["MemberCode"]);
+			});
+			temp["keyList"] = keylist;
+			VA[keys2[i]] = temp;
+		});
+		
+		console.log("default data", def);
+		console.log("ORIGINVA data", VA);
+		superObject = {};
+		superObject["default"] = def;
+		superObject["ORIGINVA"] = VA;
+		console.log("superObject", superObject);
+		saveToFile(superObject, "superData.json");
+	}
+
+</script>
+
+
+</body>
+</html>

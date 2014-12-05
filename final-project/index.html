@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Trade in Value Added - Origin of Value Added</title>
+    <link rel="stylesheet" type="text/css" href="DSCI.css">
+
+    <!-- Add IntroJs styles -->
+    <link href="libs/intro/introjs.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+    <script type="text/javascript" src="http://d3js.org/queue.v1.min.js"></script>
+    <script type="text/javascript" src="http://d3js.org/topojson.v1.min.js"></script>
+    <script type="text/javascript" src="./libs/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="./libs/colorbrewer.js"></script>
+    <script type="text/javascript" src="./libs/jquery.xdomainajax.js"></script>
+    <script type="text/javascript" src="./libs/FileSaver.js"></script>
+    <script type="text/javascript" src="./libs/intro/intro.min.js"></script>
+	<script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js "></script>
+	<script src="http://code.jquery.com/jquery-latest.js"></script>
+
+    <div id="busy"><img src="./data/ajax-loader.gif" alt="loading"></div>
+
+    <div id="header">
+        <h1>Origin of Value Added - Source Countries and Industries</h1>
+        <div id="selectorIndicator"></div>
+        <div id="focusCountry"></div>
+        <p><font face="sans-serif">David Dowey | Roseanne Feng | Matthew Silva</font></p>
+
+        <div id="menu">
+            <ul>
+                <li><a href="http://youtu.be/eUV_uLwEpVE">Video</a></li>
+                <li><a href="#" id="demo">Demo</a></li>
+                <li><a href="./ProcessBook.pdf">Process Book</a></li>
+            </ul>
+            <br/>
+        </div>
+
+    </div>
+
+    <table>
+        <tbody>
+            <tr>
+                <td>
+                    <div id="textLabel" style="vertical-align: top; float:left; display: inline-block">
+                        <div id="Industry_List" style="width: 460px">
+                            <div style="width: 460px; height: 60px">
+                                <button id="Industry_Total" style="width: 35%; float: left; height: 40px"></button>
+                                <svg id="Industry_Total_Bar"  style="width: 65%; float: left; height: 40px;"></svg>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div id="vis" style="float:left; display: inline-block"> 
+                        <div id="buttons">
+                                <button id="data1">Value</button>
+                                <button id="data2">Share %</button>
+                                <button id="data3">Country</button>
+                                <button id="data4">World</button>
+                                <button id="data5">Groups</button>
+							</div>
+	                 
+
+					 
+                        <div id ="selectorYear"></div>
+						
+						<div id = "checkboxes" style="float:left; display: inline-block">
+							<input  id="VA_Checkbox1" class="VA_Checkbox" type="checkbox" value="VAR eq 'EXGR_FVA'"  checked =  "checked" > Foreign content
+	<br>
+							<input  id="VA_Checkbox2" class="VA_Checkbox" type="checkbox" value="VAR eq 'EXGR_RIM'" checked =  "checked"> Re-imported domestic<br>
+							<input  id="VA_Checkbox3" class="VA_Checkbox" type="checkbox" value="VAR eq 'EXGR_IDC'" checked =  "checked"> Indirect domestic<br>
+							<input  id="VA_Checkbox4" class="VA_Checkbox" type="checkbox" value="VAR eq 'EXGR_DDC'" checked =  "checked"> Direct domestic<br>
+							<input type="button" id="Redraw" name="Redraw" value="Redraw" />
+					 </div>
+					 						
+                    </div>
+                </td>
+				
+				<td>
+                   <div id ="selectorChord" style="font-weight: bold;" onclick="$('#chord').toggle('blind')">Chord
+				   Diagram
+                   </div>
+                </td>
+				<td>
+				<div id="chord"></div>
+				</td>
+				<td>
+				<div id="chart" ></div>
+				</td>
+			     <td>
+				<div id ="selectorTree" style="font-weight: bold;" onclick="$('#chart').toggle('blind')" title = "Click to see TreeMap">
+                    <div id ="textTree">
+                        Tree Map
+                    </div>
+                </div>
+				</td>       
+            </tr>
+			<tr>
+				
+			</tr>
+			<tr>
+			<td>
+                   
+                </td>
+			</tr>
+        </tbody>
+    </table>
+
+    <div id="Industrytooltip" class="hidden"></div>
+    <div id="ExportRatiotooltip" class="hidden">
+        <span id="heading" style="font-weight: bold"></span><span style="font-weight: bold"></span><br/>
+        <span style="font-weight: bold">Definition: </span><span id="text"></span><br/>
+     </div>
+
+     <div id="CountryButtontooltip" class="hidden"></div>
+    <div id="tooltip" class="hidden">
+        <span style="font-weight: bold">Source country: </span><span id="source" style="font-weight: bold"></span><span style="font-weight: bold"></span><br/><span style="font-style:italic; font-weight: bold">Total foreign value added: </span><span id="total" style="font-weight: bold"></span><br/><span style="font-style:italic">Top 3 Industries of foreign value added:</span><br/>
+        <table>
+            <tr>
+                <td id="industry1"></td>
+                <td id="value1"></td>
+            </tr>
+            <tr>
+                <td id="industry2"></td>
+                <td id="value2"></td>
+            </tr>
+            <tr>
+                <td id="industry3"> Products</td>
+                <td id="value3"></td>
+            </tr>
+        </table>
+    </div>
+
+    <script type="text/javascript" src="DSCI.js"></script>
+    <script type="text/javascript" src="chord.js"></script>
+
+    <footer>
+		<div id="credits">
+        Data Source: <a href="http://www.oecd.org/sti/ind/measuringtradeinvalue-addedanoecd-wtojointinitiative.htm">OECD</a><br>
+        Powered by JQuery, D3, colorbrewer, Intro.js<br>
+		Brewer, Cynthia (2013). <a href="http://colorbrewer2.org">ColorBrewer</a>. Accessed Mar 30, 2014.<br>
+		Bostock, Mike (2013). <a href="http://d3js.org/">d3.js</a>. Accessed May 1, 2014.<br>
+		Mehrabani, Afshin (2013). <a href="http://usablica.github.io/intro.js/">Intro.js</a>. Accessed Apr 27, 2014.<br>
+		The jQuery Foundation (2014). <a href="http://jquery.com/">jQuery</a>. Accessed May 1, 2014.<br>
+		</div>
+    </footer>
+</body>
+</html>

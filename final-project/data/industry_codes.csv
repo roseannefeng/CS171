@@ -1,0 +1,20 @@
+code|industry|short
+Total|Total|Total
+01T05|Agriculture, hunting, forestry and fishing|Agriculture
+10T14|Mining and quarrying|Mining
+15T16|Food products, beverages, and tobacco|Food products
+17T19|Textiles, textile products, leather and footwear|Textiles & apparel
+20T22|Wood, paper, paper products, printing and publishing|Wood & paper
+23T26|Chemicals and non-metallic mineral products|Chemicals & minerals
+27T28|Basic metals and fabricated metal products|Basic metals
+29|Machinery and equipment, nec|Machinery
+30T33|Electrical and optical equipment|Electrical equipment
+34T35|Transport Equipment|Transport equipment
+36T37|Manufacturing nec; recycling|Other manufactures
+40T41|Electricity, gas and water supply|Utilities
+45|Construction|Construction
+50T55|Wholesale and retail trade; Hotels and restaurants|Wholesale & retail
+60T64|Transport and storage, post and telecommunication|Transport & telecoms
+65T67|Financial intermediation|Finance & insurance
+70T74|Business services|Business services
+75T95|Other services|Other services

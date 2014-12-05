@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Demo</title>
+</head>
+<body>
+    <a href="http://jquery.com/">jQuery</a><br/>
+    <a href="http://www.learningjquery.com/2009/04/better-stronger-safer-jquerify-bookmarklet/">jquerify bookmarklet</a>
+    <script src="jquery-2.1.0.js"></script>
+    <script src="jquery.xdomainajax.js"></script>
+    <div id="results"></div>
+    <script>
+
+    var url="http://en.wikipedia.org/wiki/United_States_presidential_election,_2012";
+    //$('table.sortable tbody tr td')
+    function formatState(state){
+      return "<tr><td>"+state['name']+"</td><td>"+state['obama']+"</td><td>"+state['romney']+"</td></tr>"
+    }
+    $.ajax({
+      url: url,
+      type: 'GET',
+      success: function(res) {
+        var $tds = $(res.responseText).find('table.sortable tbody tr td');
+        var states=[];
+        console.log("Length",$tds.length);
+        //Only want 50 states + DC. 15 cols per state
+        var k=0;
+        var thisstate=null;
+        for (var i=0;i<51*15; i++){
+          if (i % 15 === 0) {
+            //console.log("State", $($tds[i]).text());
+            states[k]={};
+            thisstate = states[k];
+            thisstate['name'] = $($tds[i]).text().trim();
+          } else if (i % 15 === 3){
+            thisstate['obama'] = $($tds[i]).text().trim().replace('%','');
+            thisstate['obama'] = parseFloat(thisstate['obama']);
+          } else if (i % 15 === 5){
+            thisstate['romney'] = $($tds[i]).text().trim().replace('%','');
+            thisstate['romney'] = parseFloat(thisstate['romney']);
+            k = k+1;
+          }
+        }
+        //console.log($tds);
+        console.log("This State list", states);
+        var outhtml = "<table>";
+        for (var j=0;j<states.length;j++){
+            outhtml = outhtml + formatState(states[j]);
+        }
+        outhtml = outhtml +"</table>";
+        $('#results').html(outhtml);
+      }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+<script type="text/javascript" src="../libs/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="../libs/colorbrewer.js"></script>
+<script src="../libs/FileSaver.js"></script>
+
+<div id="vis"></div>
+
+
+<script>
+
+	giantstore = {};
+
+	function runAQueryOn(indicatorString) {
+		valueArray = {};
+		$.ajax({
+			url: "http://api.worldbank.org/countries/all/indicators/" + indicatorString + "?format=jsonP&prefix=Getdata&per_page=32000", //&date=" + year, //do something here
+			async: false,
+			jsonpCallback:'getdata',
+			dataType:'jsonp',
+			success: function (data, status){
+				valueArray = {};
+				$.each(data[1], function(index, value) {
+					if (value.value != null)
+						valueArray[value.country.id] = value.value;
+//						console.log(indicatorString);
+					});
+				giantstore[indicatorString] = valueArray;
+				console.log("done", indicatorString, valueArray);
+				return valueArray
+				},
+			error: function() {
+				return console.log("error", indicatorString);
+				} 
+		});
+	}
+
+
+	var run = function(error, indicators){
+		console.log("indicators", indicators);
+	
+		var q = queue();
+//		indicators.forEach(function(d) {q.defer(runAQueryOn, d.IndicatorCode)});
+		for (i = 0; i < 2; i++) {
+			q = q.defer(runAQueryOn, indicators[i].IndicatorCode);
+		}
+		q.await(function(error, results) {console.log("giantstore", giantstore); console.log("done all", results); });
+		
+	}
+	
+	var dummy = function(error, results) {
+		if (!error)
+			console.log("done all", giantstore);
+//		saveToFile(giantstore, "fullIndicators.json");
+		else
+			console.log("broken");
+	}
+
+    var saveToFile = function(object, filename){
+        var blob, blobText;
+        blobText = [JSON.stringify(object)];
+        blob = new Blob(blobText, {
+            type: "text/plain;charset=utf-8"
+        });
+        saveAs(blob, filename);
+    }
+
+	queue()
+		.defer(d3.csv,"../data/worldBank_indicators.csv")
+		.await(run);
+	
+
+</script>
+
+
+</body>
+</html>

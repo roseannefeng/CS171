@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Homework 2 Graph</title>
+<style>
+  .link {
+    stroke: gray;
+    stroke-width: 1.5px;
+  }
+
+  .node {
+    fill: #66CC66;
+    stroke: #000;
+    stroke-width: 1px;
+  }
+
+  .node:hover {
+    fill: red;
+  }
+  
+  .x.axis path,
+  .x.axis line {
+	fill: none;
+	stroke: black;
+	shape-rendering: crispEdges;
+  }
+  .x.axis text {
+	font-family: sans-serif;
+	font-size: 11px;
+  }
+
+  .y.axis path,
+  .y.axis line {
+	fill: none;
+	stroke: black;
+	shape-rendering: crispEdges;
+  }
+  .y.axis text {
+	font-family: sans-serif;
+	font-size: 11px;
+  }
+
+</style>
+
+<head>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<p>Hover over nodes for more information! More details in problem_4_answers.md</p>
+</head>
+
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+
+d3.json("https://api.github.com/repos/mbostock/d3/branches", function(error, json) {
+    if (error) return console.warn(error);
+
+	var info = {}
+	var count = 0
+	var temp, temp2
+
+	
+	for (i = 0; i < json.length; i++) {
+		temp = json[i].commit.sha;
+		temp2 = json[i].name;
+		jQuery.ajax({url: "https://api.github.com/repos/mbostock/d3/commits?sha="+temp, async: false}).done(function(json2) {
+//			console.log(i, json2);
+			for (j = 0; j < json2.length; j++) {
+				if (!(json2[j].sha in info)) {
+					json2[j]["branch"] = temp2;
+					info[json2[j].sha] = json2[j];
+					count++
+				}
+			}
+		})
+	}
+
+	
+	// returns (# of unique values, value: # of occurrences, value: # arbitrary order)
+	function unique(arr) {
+		var a = 0, b = {}, c = {}, n = 1, prev;
+
+
+		arr.sort();
+		for ( var i = 0; i < arr.length; i++ ) {
+			if ( arr[i] !== prev ) {
+				a++
+				b[arr[i]] = 1;
+				c[arr[i]] = n;
+				n++
+			} else {
+				b[arr[i]]++;
+			}
+			prev = arr[i];
+		}
+
+		return [a, b, c];
+	}
+		 
+	var path = d3.geo.path();
+
+	var width = 1200,
+		height = 900;
+
+	var svg = d3.select("body").append("svg")
+				.attr("width", width)
+				.attr("height", height);
+
+	var fill = d3.scale.category10();
+
+	var graph = {nodes:[], links:[]};
+
+	var authors = [];
+	var daterange = [];
+	var branchtypes = []
+
+	for (var i in info) {
+		if (info[i].author != null) {
+			authors.push(info[i].author.login);
+			daterange.push(info[i].commit.author.date);
+			branchtypes.push(info[i].branch)
+		}
+	}
+
+	var nb_nodes = count;
+	var un_authors = unique(authors);
+	var un_branch = unique(branchtypes);
+
+	var format = d3.time.format("%Y-%m-%dT%XZ");
+
+	var dateScale = d3.time.scale()
+					.domain([format.parse(d3.min(daterange)), format.parse(d3.max(daterange))])
+					.range([50, width-50]);
+	var nb_cat = un_authors[0];
+	
+	count2 = 0;
+	for (var d in info) {  
+		if (info[d].author != null) { //&& info[d].parents.length > 1) 
+			for (j = 0; j < info[d].parents.length; j++)
+				{
+				if (info[info[d].parents[j].sha] != undefined && d3.time.hours(format.parse(info[d].commit.author.date), format.parse(info[info[d].parents[j].sha].commit.author.date)).length < 20)
+						info[d].parents[j]["show"] = false;
+				}
+			graph.nodes.push({ 
+				sha: info[d].sha,
+				index: count2,
+				cat: un_authors[2][info[d].author.login],
+				//nx: count2 * (width-100)/count + 50,
+				nx: dateScale(format.parse(info[d].commit.author.date)),
+				ny: un_authors[2][info[d].author.login] * 40 + 50,
+				//x: count2 * (width-100)/count + 50,
+				x: dateScale(format.parse(info[d].commit.author.date)),
+				y: un_authors[2][info[d].author.login] * 40 + 50,
+				time: info[d].commit.author.date,
+				author: info[d].author,
+				committer: info[d].committer,
+				message: info[d].commit.message,
+				tree: info[d].commit.tree,
+				branch: info[d].branch
+			  });
+		count2++;
+		}
+	}
+	
+	
+	graph.nodes.map(function(d, i) {
+		if (info[d.sha] != undefined && info[d.sha]["show"] == undefined) {
+			temp = info[d.sha].parents;
+			parent_nodes = d3.range(temp.length).map(function(d) {
+				   return temp[d].sha;
+			   });
+
+			  graph.nodes.map(function(e, j) {
+			  if (info[e.sha]["show"] == undefined && info[d.sha]["show"] == undefined && parent_nodes.indexOf(info[e.sha].sha) != -1 && i!=j) {
+				  graph.links.push({"source": i, "target": j}) }
+			  })	  
+		}
+	})
+
+
+	function graph_update(delay) {
+
+		link.transition().duration(delay)
+		  .attr("x1", function(d) { return d.target.x; })
+		  .attr("y1", function(d) { return d.target.y; })
+		  .attr("x2", function(d) { return d.source.x; })
+		  .attr("y2", function(d) { return d.source.y; });
+
+		  node.transition().duration(delay)
+			  .attr("transform", function(d) { 
+				return "translate("+d.x+","+d.y+")"; 
+			  });
+	}
+	
+	var force = d3.layout.force()
+		.size([width, height])
+		.charge(-50)
+		.linkDistance(function(d) {
+			return d3.time.hours(format.parse(d.target.time), format.parse(d.source.time)).length / 10;
+			})
+		.on("tick", tick)
+		.on("start", function(d) {})
+		.on("end", function(d) {})
+
+		
+	function tick(d) {
+	  graph_update(0);
+	}
+
+	function force_layout() {
+
+	 force.nodes(graph.nodes)
+		  .links(graph.links)
+		  .start();
+		 graph_update(500);
+	}
+	
+
+
+	function category_size() {
+	  d3.selectAll("circle").transition().duration(500).attr("r", function(d) { return Math.sqrt((d.cat+1)*10); });
+	}
+		
+	function category_color() {
+	  d3.selectAll("circle").transition().duration(500).style("fill", function(d) { return fill(d.cat); });
+	}
+
+	// set to true if some nodes are off screen
+	var hiding = false;
+	var hidden_nodes = [];
+	var hidden_links = [];
+	
+	function hide_others2(catname) {
+		if (hiding) {
+			hiding = false;
+			category_color();
+			}
+		else {
+			hiding = true;
+			d3.selectAll("circle").transition().duration(500).style("fill", function(d) { 
+				if (d.cat != catname) {
+					return "#FFFFFF"; }
+				else {
+					return fill(d.cat);}
+				})
+			}
+		}
+
+	function hide_others(catname) {
+		force.stop();
+		if (hiding) {
+			hiding = false;
+			graph.nodes.forEach(function(d, i) {
+				if (d.y > height) {
+					d.y = d.y - height;
+				}
+			  });
+/*			for (var n in hidden_links) {
+					graph.links.push(n);
+					}*/
+			d3.selectAll("line").transition().duration(500).style("visibility", "visible");
+			hidden_nodes = [];
+			hidden_links = [];
+		}
+		else {
+			hiding = true;
+			force.stop();
+			graph.nodes.forEach(function(d, i) {
+				if (d.cat != catname) {
+					hidden_nodes.push(d.index);
+					d.y = d.y + height;
+					}
+			  });			 
+			graph.links.forEach(function(d) {
+				for (var n in hidden_nodes) {
+					if (d.source.index == n || d.target.index == n) {
+						hidden_links.push(d);
+//						graph.links.pop(graph.links.indexOf(d));
+						}
+					}
+				});
+			d3.selectAll("line").transition().duration(500).style("visibility", function(d) {
+					if (hidden_links.indexOf(d) > -1) {
+						return "hidden"; }
+					else {
+						return "visible";}
+					})
+			}
+		graph_update(500);
+		}
+		
+	var link = svg.selectAll(".link")
+              .data(graph.links)
+              .enter()
+			  .append("line")
+			  .attr("class", "link")
+			  
+	link.append("line")
+		.on("mouseover", function(d) {d3.select(this).attr("stroke-width", "5px");})
+		.on("mouseout", function(d) {d3.select(this).attr("stroke-width", "1.5px");});
+	
+	var node = svg.selectAll(".node")
+				  .data(graph.nodes)
+				  .enter()
+				  .append("g").attr("class", "node");
+				  
+	node.append("circle")
+		.attr("r", 5)
+		.on("mouseover", function(d) {
+			d3.select(this).attr("r", 10);
+			})
+		.on("mouseout", function(d) {
+			d3.select(this).attr("r", 5);
+			})
+		.on("click", function(d) {hide_others(d.cat)})
+		.append("svg:title")
+		.text(function(d) {return d.branch + ", " + d.author.login + ", " + d.time});
+
+/*
+	//Code from http://bl.ocks.org/d3noob/5155181
+	svg.append("svg:defs").selectAll("marker")
+		.data(["end"])      // Different link/path types can be defined here
+	  .enter().append("svg:marker")    // This section adds in the arrows
+		.attr("id", String)
+		.attr("viewBox", "0 -5 10 10")
+		.attr("refX", 15)
+		.attr("refY", -1.5)
+		.attr("markerWidth", 6)
+		.attr("markerHeight", 6)
+		.attr("orient", "auto")
+	  .append("svg:path")
+		.attr("d", "M0,-5L10,0L0,5");
+
+	var path = svg.append("svg:g").selectAll(".link")
+			.data(link)
+		  .enter().append("svg:path")
+					.attr("fill", "none")
+					.attr("marker-end", "url(#end)");
+	//end code from outside source		
+*/
+	
+	var branches = new Array(un_branch[0]);
+	for (var i in un_branch[2]) {
+		ind = parseInt(un_branch[2][i]) - 1;
+		branches[ind] = i + ": " + un_branch[1][i];
+	}
+	
+	var text = svg.selectAll("text")
+		.data(branches)
+		.enter()
+		.append("text");
+	var branchNames = text
+						.attr("x", 50)
+						.attr("y", function(d, i) { return i * 15;})
+						.text(function(d) {return d;})
+						.attr("font-family", "sans-serif")
+						.attr("font-size", 10);
+	
+	category_color();
+	force_layout();
+
+		
+});	
+	</script>
+</body>
+</html>

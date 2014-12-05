@@ -1,0 +1,2 @@
+1. The data types are integers, often rounded, except for the header cells (which might not count as data types?), which are strings.
+2. <code>$(table).find("table.wikitable").find("tr:nth-of-type(2)")</code> can be used to select the second row in the table (i.e. the one that starts at -10,000) <br /> <code>a = $(table).find("table.wikitable").find("tr:gt(0)")</code> can be used for all rows that are not the header

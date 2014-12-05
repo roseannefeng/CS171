@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
+<script type="text/javascript" src="./libs/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="./libs/jquery.xdomainajax.js"></script>
+<script type="text/javascript" src="./libs/FileSaver.js"></script>
+
+		<script>
+	var jsonobject = {};
+	var l = {};
+	
+    var saveToFile = function(object, filename){
+        var blob, blobText;
+        blobText = [JSON.stringify(object)];
+        blob = new Blob(blobText, {
+            type: "text/plain;charset=utf-8"
+        });
+		saveAs(blob, filename);
+    }
+
+// Queue call to get the data from files
+queue()
+    .defer(d3.json,"./data/world_data_NoISO3.json")
+    .defer(d3.json,"./data/Iso3CodeToIso2Code.json")
+    .await(collateData);
+		
+	
+function collateData(error, world, isoCode) {
+		
+    // combine ISO 2-digit codes and ISO 3-digit codes in JSON
+    for (var obj in isoCode) {
+        for (var j = 0; j < world.features.length; j++) {
+            if (isoCode[obj]["Alpha-3 code"] == world.features[j].id) {
+                for (var entry in isoCode[obj]) {
+                    world.features[j].properties[entry] = isoCode[obj][entry];
+                }
+                break;
+            }
+        } }
+		
+		
+	console.log("done... saving now", world);
+	saveToFile(world, "world_data.json");
+	}
+
+		</script>
+</body>
+</html>

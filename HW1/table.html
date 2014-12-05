@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CS171 Homework 1</title>
+
+  <style type="text/css">
+  h1 {
+    text-align: center;
+    color: blue;
+    font-size: 30px;
+    font-family: "Verdana", sans-serif;
+    }
+
+  caption {
+    color: #0000CC;
+    font-size: 12px;
+    font-family: "Verdana", sans-serif;
+    font-weight: bold;
+    border: 1px solid black;
+    }
+
+  table, td {
+    text-align: center;
+    font-size: 14px;
+    font-family: "Verdana", sans-serif;
+    width: 500px;
+    border: 1px solid black;
+    border-collapse: collapse;
+    }
+
+  #th1 {
+    cursor: s-resize;}
+
+  #th2 {
+    cursor: s-resize;}
+  
+  #th3 {
+    cursor: s-resize;}
+
+  </style>
+</head>
+<body>
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <script>
+
+  function descending(a, b) {
+    return a < b ? 1 : a == b ? 0 : -1;
+  }
+
+  function cursor(i, k) {
+    if (sorted[k] === true) {d3.selectAll("th"+k).style("cursor", "n-resize"); }
+    else {d3.selectAll("th").style("cursor", "s-resize");}
+
+  }
+
+  var sorted = [false, false, false, false] 
+    //sorted[0] is a dummy, too lazy to change
+
+
+  d3.select("body").append("h1").text("Unemployment Rates for States");
+
+  d3.text("unemp_states_us_nov_2013.tsv", function(data){
+      var data = d3.tsv.parseRows(data);
+
+      var table = d3.select("body").append("table"),
+      thead = table.append("thead");
+      tbody = table.append("tbody");
+
+      var rates = [];
+      for (var n=1; n < data.length; n=n+1) {
+        rates.push(+(data[n][2]))
+      };
+
+      function ratecolor() {
+        var color = d3.scale.linear()
+          .domain([d3.min(rates), d3.max(rates)])
+          .interpolate(d3.interpolateRgb)
+          .range(["orangered", "silver"])
+
+        d3.selectAll("td.col2")
+          .style("background-color", function(d, i) {return color(rates[i])});
+      }
+
+      function zebra() {
+          d3.select("body").selectAll("tr")
+          .style("background-color", function(d, i) {
+            if (i%2 === 1) {return "#e3e3e3";}
+            else {return "#ffffff";}
+           })
+         ratecolor();
+     }
+
+      function mysort(i, k) {
+           tbody.selectAll("tr").sort(function(a, b){
+             if (k === 0) {return null;}
+             else if (k === 1) {return d3.ascending(a[1], b[1]);}
+             else if (a[2] === b[2]) {return d3.ascending(a[1], b[1]);}
+             else {return d3.ascending(a[2], b[2]);}})
+          zebra();
+      }
+
+      function revsort(i, k) {
+            tbody.selectAll("tr").sort(function(a, b){
+              if (k === 0) {return null;}
+              else if (k === 1) {return d3.descending(a[1], b[1]);}
+              else if (a[2] === b[2]) {return d3.descending(a[1], b[1]);}
+              else {return d3.descending(a[2], b[2]);}})
+          zebra();
+      }
+
+
+      var width = 100;
+      var height = 10;
+
+
+	//highlight row
+      var rows = tbody.selectAll("tr")
+      .data(data.filter(function(d, i){
+        if (i > 0) { return d; }
+        })
+      )
+      .enter()
+      .append("tr")
+         //highlight rows
+      .on("mouseover", function(){
+        d3.select(this).style("background-color", "#ffffcc");
+       })
+      .on("mouseout", function(d, i){
+        d3.select(this).style("background-color", function(){
+          if (i%2 === 1) {return "#e3e3e3";}
+          else {return "#ffffff";}
+          })
+        });
+
+
+      var cells = rows.selectAll("td")
+      .data(function(row) {
+        return d3.range(Object.keys(row).length).map(function(column, i) {
+          return row[Object.keys(row)[i]];
+          });
+        })
+      .enter()
+      .append("td")
+      .text(function(d) { return d; });
+
+      rows.insert("td").append("svg")
+       .attr("width", width)
+       .attr("height", height)
+       .append("rect")
+       .attr("height", height)
+       .attr("width", function(d) { return parseFloat(d[0]); });
+      
+      cells = rows.selectAll("td")
+      .attr("class", function(d, i) {return "col" + i}) 
+          //add an id for columns to highlight more easily
+
+      heading = data[0];
+      heading.push("Chart");
+
+      var header = thead.selectAll("tr")
+      .select("th")
+      .data(heading)
+      .enter()
+      .append("th")
+      .text(function(d) { return d; })
+      .attr("id", function(i, k) {return "th" + k;}) 
+      .on("click", function(i, k) {
+        if (k === 0) {return ;} 
+        else if (sorted[k] === false) {mysort(i, k); sorted[k] = true; cursor(i, k); zebra(); ratecolor();}
+           else {revsort(i, k); sorted[k] = false; cursor(i, k); zebra(); ratecolor();}
+           });
+
+
+       d3.select("table").append("caption").text("Unemployment Rates for States Monthly Rankings Seasonally Adjusted Dec. 2013");
+
+	//highlight column
+      var columns = tbody.selectAll("tr").selectAll("td")
+      .on("mouseover", function(d, i){
+        d3.selectAll("td.col" + i)
+          .style("background-color", "#ffffcc");
+        })
+      .on("mouseout", function(d, i){
+        d3.selectAll("td.col" + i)
+          .style("background-color", null);
+        ratecolor();
+        });
+
+
+      // load doc with rate sort in ascending order
+      mysort(0, 2);
+
+
+      d3.selectAll("tr").style("background-color", function(d, i) {
+        if (i%2 === 1) {return "#e3e3e3";}
+        else {return "#ffffff";}
+       });
+      ratecolor();
+
+      });
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+<script type="text/javascript" src="../libs/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="../libs/colorbrewer.js"></script>
+<script src="../libs/FileSaver.js"></script>
+
+<div id="vis"></div>
+
+
+<script>
+	valueArray = {};
+	$.ajax({
+		url: "http://api.worldbank.org/countries?format=jsonP&prefix=Getdata&per_page=300",
+		jsonpCallback:'getdata',
+		dataType:'jsonp',
+		success: function (data, status){
+			console.log("successfully loaded");
+			$.each(data[1], function(index, value) {
+					valueArray[value.iso2Code] = value;
+				});
+			console.log(valueArray);
+			saveToFile(valueArray,"WorldBankCountries.json")
+			},
+		error: function() {
+			return console.log("error");
+			} 
+
+    });
+
+    var saveToFile = function(object, filename){
+        var blob, blobText;
+        blobText = [JSON.stringify(object)];
+        blob = new Blob(blobText, {
+            type: "text/plain;charset=utf-8"
+        });
+        saveAs(blob, filename);
+    }
+
+
+</script>
+
+
+</body>
+</html>

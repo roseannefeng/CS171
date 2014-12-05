@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Homework 2 Graph</title>
+<style>
+  .link {
+    stroke: gray;
+    stroke-width: 1.5px;
+  }
+
+  .node {
+    fill: #66CC66;
+    stroke: #000;
+    stroke-width: 1px;
+  }
+
+  .node:hover {
+    fill: red;
+  }
+  
+  .x.axis path,
+  .x.axis line {
+	fill: none;
+	stroke: black;
+	shape-rendering: crispEdges;
+  }
+  .x.axis text {
+	font-family: sans-serif;
+	font-size: 11px;
+  }
+
+  .y.axis path,
+  .y.axis line {
+	fill: none;
+	stroke: black;
+	shape-rendering: crispEdges;
+  }
+  .y.axis text {
+	font-family: sans-serif;
+	font-size: 11px;
+  }
+
+</style>
+
+<head><script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js">
+</script></head>
+
+<body>
+Labels in tooltips!
+<script src="http://d3js.org/d3.v3.min.js"></script>
+  <form>
+  X-Axis:
+    <label><input type="radio" name="xaxis" value="time" > Time</label>
+	<label><input type="radio" name="xaxis" value="category" checked> Category</label>
+  </form>
+<script>
+
+
+d3.json("https://api.github.com/repos/Caleydo/caleydo/branches", function(error, json) {
+    if (error) return console.warn(error);
+
+	var info = {}
+	var count = 0
+	var temp, temp2
+
+	
+	for (i = 0; i < json.length; i++) {
+		temp = json[i].commit.sha;
+		temp2 = json[i].name;
+		jQuery.ajax({url: "https://api.github.com/repos/Caleydo/caleydo/commits?sha="+temp, async: false}).done(function(json2) {
+			for (j = 0; j < json2.length; j++) {
+				if (!(json2[j].sha in info)) {
+					json2[j]["branch"] = temp2;
+					info[json2[j].sha] = json2[j];
+					count++
+				}
+			}
+		})
+	}
+
+	
+	// returns (# of unique values, value: # of occurrences, value: # arbitrary order)
+	function unique(arr) {
+		var a = 0, b = {}, c = {}, n = 1, prev;
+
+
+		arr.sort();
+		for ( var i = 0; i < arr.length; i++ ) {
+			if ( arr[i] !== prev ) {
+				a++
+				b[arr[i]] = 1;
+				c[arr[i]] = n;
+				n++
+			} else {
+				b[arr[i]]++;
+			}
+			prev = arr[i];
+		}
+
+		return [a, b, c];
+	}
+		 
+	var path = d3.geo.path();
+
+	var width = 900,
+		height = 700;
+
+	var svg = d3.select("body").append("svg")
+				.attr("width", width)
+				.attr("height", height);
+
+	var fill = d3.scale.category10();
+
+	var graph = {nodes:[], links:[]};
+
+	var authors = [];
+	var daterange = [];
+	var branchtypes = []
+
+	for (var i in info) {
+		if (info[i].author != null) {
+			authors.push(info[i].author.login);
+			daterange.push(info[i].commit.author.date);
+			branchtypes.push(info[i].branch)
+		}
+	}
+
+	var nb_nodes = count;
+	var un_authors = unique(authors);
+	var un_branch = unique(branchtypes);
+
+	var format = d3.time.format("%Y-%m-%dT%XZ");
+
+	var dateScale = d3.time.scale()
+					.domain([format.parse(d3.min(daterange)), format.parse(d3.max(daterange))])
+					.range([50, width-50]);
+	var nb_cat = un_authors[0];
+	
+	count2 = 0;
+	for (var d in info) {  
+		if (info[d].author != null)
+			graph.nodes.push({ 
+				sha: info[d].sha,
+				index: count2,
+				cat: un_authors[2][info[d].author.login],
+				//nx: count2 * (width-100)/count + 50,
+				nx: dateScale(format.parse(info[d].commit.author.date)),
+				ny: un_authors[2][info[d].author.login] * 40 + 50,
+				//x: count2 * (width-100)/count + 50,
+				x: dateScale(format.parse(info[d].commit.author.date)),
+				y: un_authors[2][info[d].author.login] * 40 + 50,
+				time: info[d].commit.author.date,
+				author: info[d].author,
+				committer: info[d].committer,
+				message: info[d].commit.message,
+				tree: info[d].commit.tree,
+				branch: info[d].branch
+			  });
+		count2++;
+	}
+
+	graph.nodes.map(function(d, i) {
+	   temp = info[d.sha].parents;
+	   parent_nodes = d3.range(temp.length).map(function(d) {
+		   return temp[d].sha;
+	   });
+
+	  graph.nodes.map(function(e, j) {
+	  if(parent_nodes.indexOf(info[e.sha].sha) != -1 && i!=j) {
+		  graph.links.push({"source": i, "target": j}) }
+	  })
+	})
+
+
+	// Generate the force layout
+	var force = d3.layout.force()
+		.size([width, height])
+		.charge(-50)
+		.linkDistance(10)
+		.on("tick", tick)
+		.on("start", function(d) {})
+		.on("end", function(d) {})
+
+	function tick(d) {
+
+	  graph_update(0);
+	}
+
+	function random_layout() {
+	  
+	  force.stop();
+
+	  graph.nodes.forEach(function(d, i) {
+		d.x = width/4 + 2*width*Math.random()/4;
+		d.y = height/4 + 2*height*Math.random()/4;
+	  })
+	  
+	  graph_update(500);
+	}
+
+	function force_layout() {
+
+	 force.nodes(graph.nodes)
+		  .links(graph.links)
+		  .start();
+		 graph_update(500);
+	}
+
+	function line_cat_layout() {
+
+	 force.nodes(graph.nodes)
+		  .links(graph.links)
+		  .start();
+
+	  force.stop();
+	  
+	  graph.nodes.forEach(function(d, i) {
+//		d.x = 50 + (d.nx+1)*(width-100)/(nb_nodes);
+		d.x = d.nx;
+		d.y = d.ny - 50;
+
+	  })
+
+	  graph_update(1);
+	}
+
+
+	// change this to use the branch info to color
+	function category_color() {
+	//  d3.selectAll("circle").transition().duration(500).style("fill", function(d) { return fill(d.cat); });
+	  d3.selectAll("circle").transition().duration(500).style("fill", function(d) { return fill(d.branch); });
+	}
+
+	function category_size() {
+	  d3.selectAll("circle").transition().duration(500).attr("r", function(d) { return Math.sqrt((d.cat+1)*10); });
+	}
+
+	function graph_update(delay) {
+
+	  paths.transition().duration(delay)
+		  .attr("d", line);
+
+	  node.transition().duration(delay)
+		  .attr("transform", function(d) { 
+			return "translate("+d.x+","+d.y+")"; 
+		  });
+	}
+
+	var labels = new Array(un_authors[0]);
+	for (var i in un_authors[2]) {
+		ind = parseInt(un_authors[2][i]) - 1
+		labels[ind] = i;
+	}
+
+	var xScale = d3.scale.ordinal().rangeRoundBands([0, width]);
+	var yScale = d3.scale.ordinal().rangeRoundBands([20, nb_cat*40+20]).domain(labels);
+	
+	var xAxis = d3.svg.axis()
+					.scale(xScale)
+					.orient("bottom");
+	var yAxis = d3.svg.axis()
+					.scale(yScale)
+					.orient("left")
+					.ticks(nb_cat);
+
+	var pathdata = graph.links.map(function(d) {
+	
+		var startx = graph.nodes[d.source].x;
+		var starty = graph.nodes[d.source].y-50;
+		var endx = graph.nodes[d.target].x;
+		var endy = graph.nodes[d.target].y-50;
+		var half = (startx + endx) / 2;
+		
+		return [ {"x": startx, "y": starty}, {"x": startx + half, "y": starty},
+					{"x": startx + half, "y": endy}, {"x": endx, "y": endy} ]
+	});
+
+	function refresh_patht() {
+		pathdata = graph.links.map(function(d) {
+			var startx = d.source.x;
+			var starty = d.source.y;
+			var endx = d.target.x;
+			var endy = d.target.y;
+			var half = (startx + endx) / 2;
+			
+			return [ {"x": startx, "y": starty}, {"x": startx + half, "y": starty},
+						{"x": startx + half, "y": endy}, {"x": endx, "y": endy} ]
+		});
+		svg.selectAll(".link")
+						.data(pathdata)
+						.enter()
+	}
+	
+	function refresh_pathi() {
+		pathdata = graph.links.map(function(d) {
+			var startx = d.source.index/count * (width-100) + 100;
+			var starty = d.source.y;
+			var endx = d.target.index/count * (width-100) + 100;
+			var endy = d.target.y;
+			var half = (startx + endx) / 2;
+			
+			return [ {"x": startx, "y": starty}, {"x": startx + half, "y": starty},
+						{"x": startx + half, "y": endy}, {"x": endx, "y": endy} ]
+		});
+			svg.selectAll(".link")
+						.data(pathdata)
+						.enter()
+	
+	}
+						
+	function xtime() {
+		graph.nodes.forEach(function(d, i) {
+			d.x = d.nx;
+		})
+
+		refresh_patht();
+		graph_update(500);
+
+	}
+	
+	function xindex() {
+		graph.nodes.forEach(function(d) {
+			d.x = d.index/count * (width-100) + 100;
+		})
+		
+		refresh_pathi();
+		graph_update(500);
+
+	}
+
+
+	d3.select("input[value=\"time\"]").on("click", function() {
+		xtime();
+	})
+	d3.select("input[value=\"category\"]").on("click", function() {
+		xindex();
+	})
+
+	
+	
+	svg.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(100, 20)")
+		.call(xAxis);
+
+	svg.append("g")
+		.attr("class", "y axis")
+		.attr("transform", "translate(100, 0)")
+		.call(yAxis);
+	
+	//Code from http://bl.ocks.org/d3noob/5155181
+	svg.append("svg:defs").selectAll("marker")
+		.data(["end"])      // Different link/path types can be defined here
+	  .enter().append("svg:marker")    // This section adds in the arrows
+		.attr("id", String)
+		.attr("viewBox", "0 -5 10 10")
+		.attr("refX", 15)
+		.attr("refY", -1.5)
+		.attr("markerWidth", 6)
+		.attr("markerHeight", 6)
+		.attr("orient", "right")
+	  .append("svg:path")
+		.attr("d", "M0,-5L10,0L0,5");
+	//end code from outside source
+
+	
+	var line = d3.svg.line()
+					.x(function(d) { return d.x; })
+					.y(function(d) { return d.y; })
+					.interpolate("linear");
+
+	var paths = svg.append("svg:g").selectAll(".link")
+					.data(pathdata)
+					.enter().append("path")
+					.attr("class", "link")
+					.attr("d", line)
+					.attr("fill", "none")
+					.attr("marker-end", "url(#end)");
+					
+	var node = svg.selectAll(".node")
+				  .data(graph.nodes)
+				  .enter()
+				  .append("g").attr("class", "node");
+				  				  
+				  
+	node.append("circle")
+		.attr("r", 5)
+		.append("svg:title")
+		.text(function(d) {return d.branch + d.time});
+
+		
+	category_color();
+	line_cat_layout();
+	xindex();
+
+});
+		
+	
+	</script>
+</body>
+</html>
